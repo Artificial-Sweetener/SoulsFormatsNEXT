@@ -62,11 +62,13 @@ namespace SoulsFormats
         /// </summary>
         protected override bool Is(BinaryReaderEx br)
         {
-            if (br.Length < 4)
+            if (br.Length < 0x14)
                 return false;
 
+            br.BigEndian = false;
             string magic = br.GetASCII(0, 4);
-            return magic == "MSB ";
+            int modelVersion = br.GetInt32(0x10);
+            return magic == "MSB " && modelVersion == 73;
         }
 
         /// <summary>
