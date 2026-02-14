@@ -593,6 +593,9 @@ namespace SoulsFormats
             /// </summary>
             public class SceneGparamConfig
             {
+                private const int ReservedByteCount = 0x24;
+                private const int EventIdCount = 4;
+
                 /// <summary>
                 /// Unknown.
                 /// </summary>
@@ -624,6 +627,11 @@ namespace SoulsFormats
                 public int Unk14 { get; set; }
 
                 /// <summary>
+                /// Unknown reserved bytes.
+                /// </summary>
+                public byte[] Unk18To3B { get; private set; }
+
+                /// <summary>
                 /// Unknown.
                 /// </summary>
                 public sbyte[] EventIDs { get; private set; }
@@ -634,11 +642,27 @@ namespace SoulsFormats
                 public float Unk40 { get; set; }
 
                 /// <summary>
+                /// Unknown.
+                /// </summary>
+                public int Unk44 { get; set; }
+
+                /// <summary>
+                /// Unknown.
+                /// </summary>
+                public int Unk48 { get; set; }
+
+                /// <summary>
+                /// Unknown.
+                /// </summary>
+                public int Unk4C { get; set; }
+
+                /// <summary>
                 /// Creates a SceneGparamConfig with default values.
                 /// </summary>
                 public SceneGparamConfig()
                 {
-                    EventIDs = new sbyte[4];
+                    Unk18To3B = new byte[ReservedByteCount];
+                    EventIDs = new sbyte[EventIdCount];
                 }
 
                 /// <summary>
@@ -647,6 +671,7 @@ namespace SoulsFormats
                 public SceneGparamConfig DeepCopy()
                 {
                     var config = (SceneGparamConfig)MemberwiseClone();
+                    config.Unk18To3B = (byte[])Unk18To3B.Clone();
                     config.EventIDs = (sbyte[])EventIDs.Clone();
                     return config;
                 }
@@ -659,28 +684,34 @@ namespace SoulsFormats
                     Unk0C = br.ReadInt32();
                     Unk10 = br.ReadInt32();
                     Unk14 = br.ReadInt32();
-                    br.AssertPattern(0x24, 0x00);
-                    EventIDs = br.ReadSBytes(4);
+                    Unk18To3B = br.ReadBytes(ReservedByteCount);
+                    EventIDs = br.ReadSBytes(EventIdCount);
                     Unk40 = br.ReadSingle();
-                    br.AssertInt32(0);
-                    br.AssertInt32(0);
-                    br.AssertInt32(0);
+                    Unk44 = br.ReadInt32();
+                    Unk48 = br.ReadInt32();
+                    Unk4C = br.ReadInt32();
                 }
 
                 internal void Write(BinaryWriterEx bw)
                 {
+                    if (Unk18To3B.Length != ReservedByteCount)
+                        throw new InvalidOperationException($"{nameof(Unk18To3B)} must be exactly {ReservedByteCount} bytes.");
+
+                    if (EventIDs.Length != EventIdCount)
+                        throw new InvalidOperationException($"{nameof(EventIDs)} must contain exactly {EventIdCount} values.");
+
                     bw.WriteInt32(Unk00);
                     bw.WriteInt32(Unk04);
                     bw.WriteInt32(Unk08);
                     bw.WriteInt32(Unk0C);
                     bw.WriteInt32(Unk10);
                     bw.WriteInt32(Unk14);
-                    bw.WritePattern(0x24, 0x00);
+                    bw.WriteBytes(Unk18To3B);
                     bw.WriteSBytes(EventIDs);
                     bw.WriteSingle(Unk40);
-                    bw.WriteInt32(0);
-                    bw.WriteInt32(0);
-                    bw.WriteInt32(0);
+                    bw.WriteInt32(Unk44);
+                    bw.WriteInt32(Unk48);
+                    bw.WriteInt32(Unk4C);
                 }
             }
 
